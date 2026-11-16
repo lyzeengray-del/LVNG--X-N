@@ -37,13 +37,21 @@ object ShizukuHelper {
     fun executeShellCommand(command: String): Boolean {
         return runCatching {
             if (!isShizukuRunning()) return false
-            val p = Shizuku.newProcess(arrayOf("sh", "-c", command), null, null)
+            // Menggunakan reflection untuk mengakses Shizuku newProcess
+            val method = Shizuku::class.java.getDeclaredMethod(
+                "newProcess",
+                Array<String>::class.java,
+                Array<String>::class.java,
+                String::class.java
+            )
+            method.isAccessible = true
+            val p = method.invoke(null, arrayOf("sh", "-c", command), null, null) as Process
             p.waitFor()
             p.exitValue() == 0
         }.getOrDefault(false)
     }
 
     fun tap(x: Float, y: Float) {
-        executeShellCommand("input tap ${x.toInt()} ${y.toInt()}")
+        executeShellCommand("input tap ${x.toInt()}${y.toInt()}")
     }
 }
